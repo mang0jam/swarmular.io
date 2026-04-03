@@ -38,12 +38,44 @@
     letter-spacing: 0.1em;
     pointer-events: none; z-index: 10;
   }
+  #logo {
+    position: fixed; bottom: 0; left: 0; width: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    padding-bottom: clamp(2rem, 5vh, 4rem);
+    pointer-events: none; z-index: 10;
+  }
+  #logo-title {
+    font-family: 'Patrick Hand SC', cursive;
+    font-size: clamp(2.2rem, 6vw, 4.5rem);
+    color: #dcc490;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.15em;
+  }
+  #logo-sub {
+    font-family: monospace;
+    font-size: clamp(0.5rem, 1.2vw, 0.75rem);
+    color: #555;
+    letter-spacing: 0.35em;
+    margin-bottom: 0.5em;
+  }
+  #logo-seed { opacity: 0.22; }
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
-<!-- UI temporarily hidden to debug solid line rendering -->
-<div id="ui" style="display:none;"></div>
+<div id="logo">
+  <div id="logo-title">SWARMULAR</div>
+  <div id="logo-sub">GROW · SURVIVE · THRIVE</div>
+  <svg id="logo-seed" width="40" height="40" viewBox="-20 -20 40 40">
+    <circle cx="0" cy="0" r="8" fill="none" stroke="#dcc490" stroke-width="0.8"/>
+    <circle cx="0" cy="-8" r="8" fill="none" stroke="#dcc490" stroke-width="0.8"/>
+    <circle cx="6.9" cy="-4" r="8" fill="none" stroke="#dcc490" stroke-width="0.8"/>
+    <circle cx="6.9" cy="4" r="8" fill="none" stroke="#dcc490" stroke-width="0.8"/>
+    <circle cx="0" cy="8" r="8" fill="none" stroke="#dcc490" stroke-width="0.8"/>
+    <circle cx="-6.9" cy="4" r="8" fill="none" stroke="#dcc490" stroke-width="0.8"/>
+    <circle cx="-6.9" cy="-4" r="8" fill="none" stroke="#dcc490" stroke-width="0.8"/>
+  </svg>
+</div>
 <div id="solid-label"></div>
 
 <script>
@@ -346,15 +378,34 @@ function drawParts(dt, activeSolidIdx, solidAlpha) {
 }
 
 // ═══════════════════════════════════
-// TIMING
+// TIMING — crossfade morphing, no gaps
+// Each solid: morph-in → hold → morph-out
+// Morph-out of solid N overlaps with morph-in of solid N+1
 // ═══════════════════════════════════
-const FI=5000, HO=5000, FO=5000, DUR=FI+HO+FO;
-function sAlpha(idx,t) {
-  const tot=solids.length*DUR; let rel=(t%tot)-idx*DUR;
-  if(rel<0)rel+=tot; if(rel>=DUR)return 0;
-  if(rel<FI){const p=rel/FI;return p*p*(3-2*p);}
-  if(rel<FI+HO)return 1;
-  const p=(rel-FI-HO)/FO; return 1-p*p*(3-2*p);
+const MORPH = 6000;   // crossfade duration (both fading simultaneously)
+const HOLD = 7500;    // 50% longer hold at full visibility
+const STEP = MORPH + HOLD; // time from one solid's start to the next
+
+function sAlpha(idx, t) {
+  const tot = solids.length * STEP;
+  let rel = (t % tot) - idx * STEP;
+  if (rel < 0) rel += tot;
+
+  // Morph in: 0 → MORPH
+  if (rel < MORPH) {
+    const p = rel / MORPH;
+    return p * p * (3 - 2 * p); // smoothstep
+  }
+  // Hold: MORPH → MORPH + HOLD
+  if (rel < MORPH + HOLD) {
+    return 1;
+  }
+  // Morph out: MORPH + HOLD → MORPH + HOLD + MORPH
+  if (rel < MORPH + HOLD + MORPH) {
+    const p = (rel - MORPH - HOLD) / MORPH;
+    return 1 - p * p * (3 - 2 * p);
+  }
+  return 0;
 }
 
 // ═══════════════════════════════════
