@@ -76,7 +76,6 @@
     <circle cx="-6.9" cy="-4" r="8" fill="none" stroke="#dcc490" stroke-width="0.8"/>
   </svg>
 </div>
-<div id="solid-label"></div>
 
 <script>
 const TAU = Math.PI * 2;
@@ -432,8 +431,6 @@ function frame(ts) {
     const a=sAlpha(i,ts);
     if(a>0.005){
       drawSolid(solids[i],a);
-      labelEl.style.color=`rgba(100,200,180,${a*0.5})`;
-      labelEl.textContent=solids[i].name;
     }
   }
   requestAnimationFrame(frame);
