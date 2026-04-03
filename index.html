@@ -59,6 +59,14 @@
     margin-bottom: 0.5em;
   }
   #logo-seed { opacity: 0.22; }
+  #coming-soon {
+    position: fixed; bottom: 0.8rem; left: 50%; transform: translateX(-50%);
+    font-family: monospace;
+    font-size: clamp(0.45rem, 1vw, 0.6rem);
+    color: #333;
+    letter-spacing: 0.3em;
+    pointer-events: none; z-index: 10;
+  }
 </style>
 </head>
 <body>
@@ -76,6 +84,7 @@
     <circle cx="-6.9" cy="-4" r="8" fill="none" stroke="#dcc490" stroke-width="0.8"/>
   </svg>
 </div>
+<div id="coming-soon">COMING SOON</div>
 
 <script>
 const TAU = Math.PI * 2;
@@ -89,7 +98,7 @@ function resize() {
   W = window.innerWidth; H = window.innerHeight;
   cv.width = W * dpr; cv.height = H * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  cx = W / 2; cy = H * 0.28; // shifted up significantly for mobile centering with bottom logo
+  cx = W / 2; cy = H * 0.24; // shifted up for mobile centering with bottom logo
   r = Math.min(W, H) * 0.15;
 }
 window.addEventListener('resize', resize);
