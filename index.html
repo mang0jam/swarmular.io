@@ -89,7 +89,7 @@ function resize() {
   W = window.innerWidth; H = window.innerHeight;
   cv.width = W * dpr; cv.height = H * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  cx = W / 2; cy = H / 2;
+  cx = W / 2; cy = H * 0.42; // shifted up to account for bottom logo, better mobile centering
   r = Math.min(W, H) * 0.15;
 }
 window.addEventListener('resize', resize);
