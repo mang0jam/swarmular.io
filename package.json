@@ -1,0 +1,11 @@
+{
+  "name": "swarmular-io",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "javascript-obfuscator src/main.js --output app.js --config obfuscator.config.json"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.1"
+  }
+}

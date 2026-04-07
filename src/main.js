@@ -1,52 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swarmular.io — Grow Your Swarm</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand+SC&display=swap" rel="stylesheet">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0a0a0a; overflow: hidden; }
-  canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
-  #ui {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    pointer-events: none; z-index: 10;
-  }
-  #title {
-    font-family: 'Patrick Hand SC', cursive;
-    font-size: clamp(2.5rem, 7vw, 5rem);
-    color: #dcc490;
-    letter-spacing: 0.15em;
-    margin-bottom: 0.2em;
-  }
-  #subtitle {
-    font-family: monospace;
-    font-size: clamp(0.55rem, 1.4vw, 0.8rem);
-    color: #555;
-    letter-spacing: 0.35em;
-    margin-bottom: 0.4em;
-  }
-  #solid-label {
-    position: fixed; bottom: 2rem; right: 2.5rem;
-    font-family: 'Patrick Hand SC', cursive;
-    font-size: 1.3rem;
-    color: rgba(100, 200, 180, 0);
-    letter-spacing: 0.1em;
-    pointer-events: none; z-index: 10;
-  }
-</style>
-</head>
-<body>
-<canvas id="cv"></canvas>
-<!-- UI temporarily hidden to debug solid line rendering -->
-<div id="ui" style="display:none;"></div>
-<div id="solid-label"></div>
-
-<script>
 const TAU = Math.PI * 2;
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
@@ -58,27 +9,19 @@ function resize() {
   W = window.innerWidth; H = window.innerHeight;
   cv.width = W * dpr; cv.height = H * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  cx = W / 2; cy = H / 2;
+  cx = W / 2;
+  cy = W > H ? H * 0.42 : H * 0.35;
   r = Math.min(W, H) * 0.15;
 }
 window.addEventListener('resize', resize);
 resize();
 
-// ═══════════════════════════════════
-// METATRON'S CUBE — 13 POINTS
-// 0: center
-// 1-6: inner ring r (1=top, clockwise by 60°)
-// 7-12: outer ring 2r (7=top, clockwise by 60°)
-// ═══════════════════════════════════
 function ptXY(i) {
   if (i === 0) return [0, 0];
   if (i <= 6) { const a = (i-1)*TAU/6-TAU/4; return [r*Math.cos(a), r*Math.sin(a)]; }
   const a = (i-7)*TAU/6-TAU/4; return [2*r*Math.cos(a), 2*r*Math.sin(a)];
 }
 
-// ═══════════════════════════════════
-// FLOWER OF LIFE + METATRON BASE
-// ═══════════════════════════════════
 function drawFlower(alpha, lw) {
   const c = [[0,0]];
   for (let i = 0; i < 6; i++) { const a=i*TAU/6-TAU/4; c.push([r*Math.cos(a), r*Math.sin(a)]); }
@@ -103,37 +46,19 @@ function drawMetatron(alpha) {
   ctx.restore();
 }
 
-// ═══════════════════════════════════
-// SOLID DEFINITIONS
-//
-// All edges use METATRON POINT NUMBERS directly (0-12).
-// Each edge marked as 'front' (bright, facing viewer) or 'back' (dim, behind).
-//
-// Z-depth logic per solid — which vertices are closer/further
-// determines which edges face the viewer.
-//
-// ALL solids use outer ring (2r) for their main vertices = same size.
-// ═══════════════════════════════════
-
-// Each solid is a subset of Metatron's Cube edges — ALL lines same weight.
-// These are 2D sacred geometry patterns derived from the Fruit of Life.
-// Reference: platonic solids within Metatron's Cube (traditional construction).
 const solids = [
   {
     name: 'Tetrahedron',
-    // Upward triangle (alternating outer) + 3 spokes to center
     edges: [[7,9],[9,11],[11,7],[0,7],[0,9],[0,11]],
     color: [150, 240, 220],
   },
   {
     name: 'Hexahedron',
-    // Outer hexagon (7-12) + 3 diagonals through center — same size as all others
     edges: [[7,8],[8,9],[9,10],[10,11],[11,12],[12,7],[7,10],[8,11],[9,12]],
     color: [220, 200, 100],
   },
   {
     name: 'Octahedron',
-    // Outer hexagon + Star of David (two interlocking triangles) — outer ring
     edges: [
       [7,8],[8,9],[9,10],[10,11],[11,12],[12,7],
       [7,9],[9,11],[11,7],
@@ -143,7 +68,6 @@ const solids = [
   },
   {
     name: 'Icosahedron',
-    // All 12 non-center points connected: outer hex, inner hex, all radials
     edges: [
       [7,8],[8,9],[9,10],[10,11],[11,12],[12,7],
       [1,2],[2,3],[3,4],[4,5],[5,6],[6,1],
@@ -155,7 +79,6 @@ const solids = [
   },
   {
     name: 'Dodecahedron',
-    // All 13 points: both hexagons + radials + center spokes
     edges: [
       [7,8],[8,9],[9,10],[10,11],[11,12],[12,7],
       [1,2],[2,3],[3,4],[4,5],[5,6],[6,1],
@@ -166,15 +89,11 @@ const solids = [
   },
 ];
 
-// ═══════════════════════════════════
-// DRAW SOLID — all edges same weight, clean wireframe
-// ═══════════════════════════════════
 function drawSolid(solid, alpha) {
   const [cr, cg, cb] = solid.color;
   ctx.save();
   ctx.translate(cx, cy);
 
-  // Edge glow
   ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, ${alpha * 0.1})`;
   ctx.lineWidth = 7;
   for (const [a, b] of solid.edges) {
@@ -182,7 +101,6 @@ function drawSolid(solid, alpha) {
     ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke();
   }
 
-  // Edge core
   ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, ${alpha * 0.75})`;
   ctx.lineWidth = 2;
   for (const [a, b] of solid.edges) {
@@ -190,7 +108,6 @@ function drawSolid(solid, alpha) {
     ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke();
   }
 
-  // Vertex glow
   const usedVerts = new Set(solid.edges.flat());
   for (const i of usedVerts) {
     const p = ptXY(i);
@@ -203,21 +120,15 @@ function drawSolid(solid, alpha) {
   ctx.restore();
 }
 
-// ═══════════════════════════════════
-// PARTICLES
-// ═══════════════════════════════════
-// Particles flow along geometry lines only
 const parts = [];
 
-// Build all Metatron's Cube edges (78 total)
 const metEdges = [];
 for (let i = 0; i < 13; i++) for (let j = i+1; j < 13; j++) metEdges.push([i, j]);
 
-// Build Flower of Life circle centers
 const flowerCenters = [[0, 0]];
 for (let i = 0; i < 6; i++) {
   const a = i*TAU/6-TAU/4;
-  flowerCenters.push([Math.cos(a), Math.sin(a)]);  // normalized by r
+  flowerCenters.push([Math.cos(a), Math.sin(a)]);
 }
 for (let i = 0; i < 6; i++) {
   const a = i*TAU/6-TAU/4;
@@ -226,7 +137,6 @@ for (let i = 0; i < 6; i++) {
   flowerCenters.push([1.732*Math.cos(a2), 1.732*Math.sin(a2)]);
 }
 
-// Edge particles — travel along Metatron's Cube edges
 for (let i = 0; i < 200; i++) {
   const edge = metEdges[Math.floor(Math.random() * metEdges.length)];
   parts.push({
@@ -234,13 +144,12 @@ for (let i = 0; i < 200; i++) {
     edgeA: edge[0], edgeB: edge[1],
     t: Math.random(),
     speed: (0.03 + Math.random() * 0.2) * (Math.random() < 0.5 ? 1 : -1),
-    sz: 0.3 + Math.random() * 2.5,  // wide size range
+    sz: 0.3 + Math.random() * 2.5,
     pink: Math.random() < 0.3,
-    colorShift: Math.random() * 1000, // when to shift color
+    colorShift: Math.random() * 1000,
   });
 }
 
-// Circle particles — orbit along ALL Flower of Life circles
 for (let i = 0; i < 150; i++) {
   const ci = Math.floor(Math.random() * flowerCenters.length);
   parts.push({
@@ -254,7 +163,6 @@ for (let i = 0; i < 150; i++) {
   });
 }
 
-// Solid-aware particles — flow along the active solid's edges
 const solidParts = [];
 for (let i = 0; i < 200; i++) {
   solidParts.push({
@@ -271,7 +179,6 @@ function assignSolidParts(solidIdx) {
   const edges = solids[solidIdx].edges;
   for (const sp of solidParts) {
     if (sp.lastSolidIdx !== solidIdx) {
-      // Reassign to a random edge of the new solid
       const e = edges[Math.floor(Math.random() * edges.length)];
       sp.edgeA = e[0]; sp.edgeB = e[1];
       sp.t = Math.random();
@@ -283,7 +190,6 @@ function assignSolidParts(solidIdx) {
 function drawParts(dt, activeSolidIdx, solidAlpha) {
   const time = performance.now() / 1000;
 
-  // Background particles (metatron edges + flower circles)
   for (const p of parts) {
     let x, y;
     if (p.type === 'edge') {
@@ -311,13 +217,12 @@ function drawParts(dt, activeSolidIdx, solidAlpha) {
     }
   }
 
-  // Solid-aware particles — brighter, flow along the active solid's edges
   if (activeSolidIdx >= 0 && solidAlpha > 0.05) {
     assignSolidParts(activeSolidIdx);
     const [cr, cg, cb] = solids[activeSolidIdx].color;
     for (const sp of solidParts) {
       sp.t += sp.speed * dt;
-      if (sp.t > 1) { // bounce to a new edge
+      if (sp.t > 1) {
         sp.t = 0;
         const edges = solids[activeSolidIdx].edges;
         const e = edges[Math.floor(Math.random() * edges.length)];
@@ -345,21 +250,29 @@ function drawParts(dt, activeSolidIdx, solidAlpha) {
   }
 }
 
-// ═══════════════════════════════════
-// TIMING
-// ═══════════════════════════════════
-const FI=5000, HO=5000, FO=5000, DUR=FI+HO+FO;
-function sAlpha(idx,t) {
-  const tot=solids.length*DUR; let rel=(t%tot)-idx*DUR;
-  if(rel<0)rel+=tot; if(rel>=DUR)return 0;
-  if(rel<FI){const p=rel/FI;return p*p*(3-2*p);}
-  if(rel<FI+HO)return 1;
-  const p=(rel-FI-HO)/FO; return 1-p*p*(3-2*p);
+const MORPH = 6000;
+const HOLD = 7500;
+const STEP = MORPH + HOLD;
+
+function sAlpha(idx, t) {
+  const tot = solids.length * STEP;
+  let rel = (t % tot) - idx * STEP;
+  if (rel < 0) rel += tot;
+
+  if (rel < MORPH) {
+    const p = rel / MORPH;
+    return p * p * (3 - 2 * p);
+  }
+  if (rel < MORPH + HOLD) {
+    return 1;
+  }
+  if (rel < MORPH + HOLD + MORPH) {
+    const p = (rel - MORPH - HOLD) / MORPH;
+    return 1 - p * p * (3 - 2 * p);
+  }
+  return 0;
 }
 
-// ═══════════════════════════════════
-// MAIN
-// ═══════════════════════════════════
 let last=0;
 function frame(ts) {
   const dt=Math.min((ts-last)/1000,0.1); last=ts;
@@ -367,9 +280,8 @@ function frame(ts) {
 
   let peak=0;
   for(let i=0;i<solids.length;i++) peak=Math.max(peak,sAlpha(i,ts));
-  drawFlower(0.12, 0.7);  // constant, no breathing
+  drawFlower(0.12, 0.7);
   drawMetatron(0.7);
-  // Find the active solid
   let activeSolidIdx = -1, activeSolidAlpha = 0;
   for(let i=0;i<solids.length;i++){
     const a=sAlpha(i,ts);
@@ -381,13 +293,8 @@ function frame(ts) {
     const a=sAlpha(i,ts);
     if(a>0.005){
       drawSolid(solids[i],a);
-      labelEl.style.color=`rgba(100,200,180,${a*0.5})`;
-      labelEl.textContent=solids[i].name;
     }
   }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-</script>
-</body>
-</html>
