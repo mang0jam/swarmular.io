@@ -11,7 +11,9 @@ function resize() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   cx = W / 2;
   cy = W > H ? H * 0.42 : H * 0.35;
-  r = Math.min(W, H) * 0.15;
+  // Scale r so the full flower of life (3r from center) fits within the viewport
+  const maxR = Math.min(cy, H - cy, cx) / 3;
+  r = maxR * 0.92; // slight padding from edges
 }
 window.addEventListener('resize', resize);
 resize();
